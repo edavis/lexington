@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-lexington.py -- an OPML-based website generator
+lexington.py -- an OPML to HTML processor
 """
 
 import argparse
