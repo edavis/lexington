@@ -4,21 +4,64 @@
 lexington.py -- an OPML to HTML processor
 """
 
+import os
 import argparse
 import requests
 from lxml import etree
+from pathlib import Path
+from jinja2 import Environment, FileSystemLoader
+
+environment = Environment(loader=FileSystemLoader('templates'))
+
+def identifier(node):
+    if node.get('name'):
+        return node.get('name')
+    elif node.get('text'):
+        text = node.get('text')
+        return text.replace(' ', '-').lower()
+
+def build_path(node):
+    if not node.get('type'):
+        ancestors = [identifier(node)]
+    else:
+        ancestors = []
+    for ancestor in node.iterancestors('outline'):
+        ancestors.insert(0, identifier(ancestor))
+    path = ('/'.join(ancestors)).lstrip('/')
+    if not node.get('type'):
+        return Path('%s/index.html' % path)
+    else:
+        return Path('%s/%s.html' % (path, identifier(node)))
 
 def render_outline(node):
-    print ('render_outline', node.get('text'))
+    return (
+        build_path(node),
+        node.get('text'),
+    )
 
 def render_link(node):
-    print ('render_link', node.get('text'))
+    return (
+        build_path(node),
+        node.get('text'),
+    )
 
 def render_thread(node):
-    print ('render_thread', node.get('text'))
+    return (
+        build_path(node),
+        node.get('text'),
+    )
 
 def render_index(node):
-    print ('render_index', node.get('text'))
+    return (
+        build_path(node),
+        'index',
+    )
+
+def write_output(path, content):
+    if not path.parent.is_dir():
+        path.parent.mkdir(parents=True)
+    with path.open('w') as fp:
+        fp.write(content.decode('utf-8'))
 
 render_types = {
     'outline': render_outline,
@@ -30,10 +73,13 @@ def render(node, depth=1):
     text = node.get('text')
     terminal = node.get('type') in render_types
 
+    # TODO skip nodes with isComment=true
+
     # Render a terminal node.
     if terminal:
         func = render_types[node.get('type')]
-        func(node)
+        (path, content) = func(node)
+        write_output(path, content)
 
     # Render an index node.
     #
@@ -43,7 +89,8 @@ def render(node, depth=1):
     # I think this could overflow on very deep OPML files but I've
     # never had any problems.
     elif len(node) and not terminal:
-        render_index(node)
+        (path, content) = render_index(node)
+        write_output(path, content)
         return render(node[0], depth + 1)
 
     # Move onto the next node.
@@ -69,7 +116,13 @@ def render(node, depth=1):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('input')
+    parser.add_argument('-o', '--output', default='html')
     args = parser.parse_args()
+
+    output = Path(args.output)
+    if not output.is_dir():
+        output.mkdir(parents=True)
+    os.chdir(str(output))
 
     if args.input.startswith(('http://', 'https://')):
         resp = requests.get(args.input)
