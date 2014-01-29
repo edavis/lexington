@@ -21,18 +21,19 @@ def identifier(node):
         return slugify(node.get('text').decode('utf-8'))
 
 def build_path(node):
+    ancestors = []
     if not node.get('type'):
-        ancestors = [identifier(node)]
-    else:
-        ancestors = []
+        ancestors.append(identifier(node))
+
     for ancestor in node.iterancestors('outline'):
         ancestors.insert(0, identifier(ancestor))
-    path = ('/'.join(ancestors)).lstrip('/')
+
+    path = '/'.join(ancestors)
     if not node.get('type'):
-        return Path('%s/index.html' % path)
+        p = '%s/index.html' % (path)
     else:
-        p = ('%s/%s.html' % (path, identifier(node))).encode('utf-8')
-        return Path(p)
+        p = '%s%s%s.html' % (path, '/' if path else '', identifier(node))
+    return Path(p.encode('utf-8'))
 
 def render_outline(node):
     return str(node.attrib)
