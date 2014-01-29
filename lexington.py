@@ -34,30 +34,19 @@ def build_path(node):
         return Path('%s/%s.html' % (path, identifier(node)))
 
 def render_outline(node):
-    return (
-        build_path(node),
-        node.get('text'),
-    )
+    return str(node.attrib)
 
 def render_link(node):
-    return (
-        build_path(node),
-        node.get('text'),
-    )
+    return str(node.attrib)
 
 def render_thread(node):
-    return (
-        build_path(node),
-        node.get('text'),
-    )
+    return str(node.attrib)
 
 def render_index(node):
-    return (
-        build_path(node),
-        'index',
-    )
+    return str(node.attrib)
 
-def write_output(path, content):
+def write_output(node, content):
+    path = build_path(node)
     if not path.parent.is_dir():
         path.parent.mkdir(parents=True)
     with path.open('w') as fp:
@@ -78,8 +67,7 @@ def render(node, depth=1):
     # Render a terminal node.
     if terminal:
         func = render_types[node.get('type')]
-        (path, content) = func(node)
-        write_output(path, content)
+        write_output(node, func(node))
 
     # Render an index node.
     #
@@ -89,8 +77,7 @@ def render(node, depth=1):
     # I think this could overflow on very deep OPML files but I've
     # never had any problems.
     elif len(node) and not terminal:
-        (path, content) = render_index(node)
-        write_output(path, content)
+        write_output(node, render_index(node))
         return render(node[0], depth + 1)
 
     # Move onto the next node.
