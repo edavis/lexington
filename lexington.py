@@ -99,6 +99,14 @@ def render(node):
                 return
         return render(parent.getnext())
 
+def parse_opml(source):
+    if source.startswith(('http://', 'https://')):
+        resp = requests.get(source)
+        resp.raise_for_status()
+        return etree.fromstring(resp.content)
+    else:
+        return etree.parse(source).getroot()
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('input')
@@ -110,13 +118,7 @@ def main():
         output.mkdir(parents=True)
     os.chdir(str(output))
 
-    if args.input.startswith(('http://', 'https://')):
-        resp = requests.get(args.input)
-        resp.raise_for_status()
-        doc = etree.fromstring(resp.content)
-    else:
-        doc = etree.parse(args.input).getroot()
-    head, body = doc
+    head, body = parse_opml(args.input)
     assert len(body), 'no outline elements in the body!'
     render(body[0])
 
