@@ -117,10 +117,10 @@ def main():
     output = Path(args.output)
     if not output.is_dir():
         output.mkdir(parents=True)
-    os.chdir(str(output))
 
     head, body = parse_opml(args.input)
     assert len(body), 'no outline elements in the body!'
+    os.chdir(str(output))
     render(body[0])
 
 if __name__ == '__main__':
