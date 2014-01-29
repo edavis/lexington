@@ -59,7 +59,7 @@ render_types = {
     'thread': render_thread,
 }
 
-def render(node, depth=1):
+def render(node):
     text = node.get('text')
     terminal = node.get('type') in render_types
 
@@ -79,7 +79,7 @@ def render(node, depth=1):
     # never had any problems.
     elif len(node) and not terminal:
         write_output(node, render_index(node))
-        return render(node[0], depth + 1)
+        return render(node[0])
 
     # Move onto the next node.
     #
@@ -90,16 +90,14 @@ def render(node, depth=1):
     # Top-level nodes are at a depth of 1, so if our "ancestor search"
     # hits the <body> element, that means we're done.
     if node.getnext() is not None:
-        return render(node.getnext(), depth)
+        return render(node.getnext())
     elif node.getnext() is None:
         parent = node.getparent()
-        depth -= 1
         while parent.getnext() is None:
             parent = parent.getparent()
-            depth -= 1
-            if depth < 1:
+            if parent.tag == 'body':
                 return
-        return render(parent.getnext(), depth)
+        return render(parent.getnext())
 
 def main():
     parser = argparse.ArgumentParser()
