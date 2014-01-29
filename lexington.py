@@ -7,6 +7,7 @@ lexington.py -- an OPML to HTML processor
 import os
 import argparse
 import requests
+from slugify import slugify
 from lxml import etree
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
@@ -17,8 +18,7 @@ def identifier(node):
     if node.get('name'):
         return node.get('name')
     elif node.get('text'):
-        text = node.get('text')
-        return text.replace(' ', '-').lower()
+        return slugify(node.get('text').decode('utf-8'))
 
 def build_path(node):
     if not node.get('type'):
@@ -31,7 +31,8 @@ def build_path(node):
     if not node.get('type'):
         return Path('%s/index.html' % path)
     else:
-        return Path('%s/%s.html' % (path, identifier(node)))
+        p = ('%s/%s.html' % (path, identifier(node))).encode('utf-8')
+        return Path(p)
 
 def render_outline(node):
     return str(node.attrib)
