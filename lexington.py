@@ -180,6 +180,8 @@ class Node(object):
             return Node(node.getnext(), self.opml)
         elif node.getnext() is None:
             parent = node.getparent()
+            if parent.tag == 'body':
+                return
             while parent.getnext() is None:
                 parent = parent.getparent()
                 if parent.tag == 'body':
