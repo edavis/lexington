@@ -166,9 +166,10 @@ class Node(object):
         """
         render_node = node.get('type') in self.render_nodetypes
         index_node = len(node) and not render_node
+        skip_node = (node.get('isComment', 'false') == 'true' or
+                     self.text.startswith('#'))
 
-        # Skip commented nodes entirely
-        if node.get('isComment', 'false') == 'true':
+        if skip_node:
             pass
         elif render_node or index_node:
             self.render()
