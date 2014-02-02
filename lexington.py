@@ -286,7 +286,10 @@ class Node(object):
         """
         fname = self.safe_filename(self.path())
         node_type = self.node.get('type', 'index')
-        template = environment.get_template('%s.html' % node_type)
+        template = environment.select_template([
+            '%s.html' % node_type,
+            'default.html',
+        ])
         self.context.update({
             'node': self,
         })
