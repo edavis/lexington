@@ -47,7 +47,21 @@ class OPML(object):
         output = path(output)
         output.makedirs_p()
         output.cd()
+        self.render_root()
         return Node(self.body[0], self)
+
+    def render_root(self):
+        """
+        Render a root index.html file.
+        """
+        context = {
+            'head': self.headers,
+            'node': Index(self.body, self),
+        }
+        template = environment.get_template('index.html')
+        content = template.render(context)
+        with path('index.html').open('w') as fp:
+            fp.write(content.encode('utf-8'))
 
     def parse(self, source):
         """
@@ -292,6 +306,33 @@ class Node(object):
         Return this node's text attribute as a UTF-8 string.
         """
         return unicode(self).encode('utf-8')
+
+class Index(object):
+
+    """
+    The root index.html.
+
+    When an object of this class is rendered in index.html, it
+    iterates over all its "render" nodes.
+
+    The Node class can't be used here as it requires an <outline>
+    element.
+    """
+
+    def __init__(self, body, opml):
+        self.body = body
+        self.opml = opml
+        self.index_children = iter(self.body.xpath(".//outline[@type and not(@isComment='true')]"))
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        child = next(self.index_children)
+        return Node(child, self.opml, process=False)
+
+    def __unicode__(self):
+        return u'Home'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
