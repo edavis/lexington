@@ -115,7 +115,7 @@ class Node(object):
         self.context.update(node.attrib)
         # Any descendant of this node that has a type attribute gets
         # displayed on index pages.
-        self.index_children = iter(self.node.xpath('.//outline[@type]'))
+        self.index_children = iter(self.node.xpath('.//outline[@type and not(@isComment="true")]'))
         if process:
             self.process(node)
 
@@ -154,7 +154,10 @@ class Node(object):
         render_node = node.get('type') in self.render_nodetypes
         index_node = len(node) and not render_node
 
-        if render_node or index_node:
+        # Skip commented out nodes entirely
+        if node.get('isComment', 'false') == 'true':
+            pass
+        elif render_node or index_node:
             self.render()
             if index_node:
                 return Node(node[0], self.opml)
