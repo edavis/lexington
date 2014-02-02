@@ -18,6 +18,15 @@ import sys; sys.setrecursionlimit(3000)
 
 environment = Environment(loader=FileSystemLoader('../templates'))
 
+def iter_index_children(el):
+    """
+    Return all the valid render nodes that are descendants of the
+    supplied element.
+    """
+    for descendant in el.iterdescendants('outline'):
+        if Node.render_node(descendant) and not Node.skip_node(descendant):
+            yield descendant
+
 class OPML(object):
 
     """
@@ -127,9 +136,7 @@ class Node(object):
             'head': opml.headers,
         }
         self.context.update(node.attrib)
-        # Any descendant of this node that has a type attribute gets
-        # displayed on index pages.
-        self.index_children = iter(self.node.xpath('.//outline[@type and not(@isComment="true")]'))
+        self.index_children = iter_index_children(node)
         if process:
             self.process(node)
 
@@ -142,6 +149,15 @@ class Node(object):
         """
         child = next(self.index_children)
         return Node(child, self.opml, process=False)
+
+    @staticmethod
+    def render_node(el):
+        return el.get('type') in Node.render_nodetypes
+
+    @staticmethod
+    def skip_node(el):
+        return ((el.get('isComment', 'false') == 'true') or
+                (el.get('text').startswith('#')))
 
     def process(self, node):
         """
@@ -164,10 +180,9 @@ class Node(object):
         we have processed everything in the last summit, so we return
         None which stops all further processing.
         """
-        render_node = node.get('type') in self.render_nodetypes
+        render_node = self.render_node(node)
         index_node = len(node) and not render_node
-        skip_node = (node.get('isComment', 'false') == 'true' or
-                     self.text.startswith('#'))
+        skip_node = self.skip_node(node)
 
         if skip_node:
             pass
@@ -329,7 +344,7 @@ class Index(object):
     def __init__(self, body, opml):
         self.body = body
         self.opml = opml
-        self.index_children = iter(self.body.xpath(".//outline[@type and not(@isComment='true')]"))
+        self.index_children = iter_index_children(body)
 
     def __iter__(self):
         return self
