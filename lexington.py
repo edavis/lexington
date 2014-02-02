@@ -277,7 +277,8 @@ class Node(object):
         - Create any parent directories as needed
         """
         p = path(filename.lstrip('/'))
-        p.parent.makedirs_p()
+        if p.parent:
+            p.parent.makedirs_p()
         return p
 
     def render(self):
