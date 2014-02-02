@@ -131,8 +131,7 @@ class Node(object):
 
     def process(self, node):
         """
-        Render the this node (if possible) and then move onto the next
-        one.
+        Render this node (if possible) and then move onto the next one.
 
         This method is called from the constructor.
 
@@ -154,7 +153,7 @@ class Node(object):
         render_node = node.get('type') in self.render_nodetypes
         index_node = len(node) and not render_node
 
-        # Skip commented out nodes entirely
+        # Skip commented nodes entirely
         if node.get('isComment', 'false') == 'true':
             pass
         elif render_node or index_node:
