@@ -23,10 +23,15 @@ class OPML(object):
     """
     An OPML file.
 
-    This works for both local filenames and remote URLs.
+    This class accepts both local filenames and remote URLs.
     """
 
     def __init__(self, source):
+        """
+        Parse an OPML file located at source.
+
+        - source (str): Local filename or remote URL of OPML file.
+        """
         self.source = source
         self.head, self.body = self.parse(source)
         self.headers = self.parse_headers(self.head)
@@ -34,11 +39,10 @@ class OPML(object):
 
     def render(self, output):
         """
-        Render HTML files from the source OPML file into the given
-        `output` directory.
+        Render HTML files from the source OPML file into the provided
+        directory.
 
-        Keyword arguments:
-          output (str) -- local directory to store HTML files
+        - output (str): Directory to store HTML files.
         """
         output = path(output)
         output.makedirs_p()
@@ -47,10 +51,9 @@ class OPML(object):
 
     def parse(self, source):
         """
-        Return the root <opml> element from an OPML file.
+        Return the root <opml> element from the OPML file.
 
-        Keyword arguments:
-          source (str) -- OPML URL or filename
+        - source (str): Local filename or remote URL of OPML file.
         """
         if re.search('https?://', source):
             resp = requests.get(source)
@@ -61,7 +64,19 @@ class OPML(object):
 
     def parse_headers(self, head_element):
         """
-        Return the <head> elements in this OPML file as a dict.
+        Return the <head> elements from this OPML file as a dict.
+
+        - head_element: Parsed <head> element of OPML file.
+
+        For example:
+          <head>
+            <title>foo</title>
+            <dateModified>XXX</dateModified>
+            [...]
+          </head>
+
+        Returns:
+          {'title': 'foo', 'dateMmodified': 'XXX', ...}
         """
         headers = {}
         for element in head_element:
@@ -81,7 +96,16 @@ class Node(object):
         'thread',
     }
 
-    def __init__(self, node, opml):
+    def __init__(self, node, opml, process=True):
+        """
+        Create a Node object.
+
+        - node: An <outline> element.
+        - opml: An OPML object.
+        - process (bool): Whether to recursively render this node and its
+          children. Set to False when gathering the outlines for
+          display on the index pages.
+        """
         self.node = node
         self.opml = opml
         self.text = node.get('text').decode('utf-8')
@@ -89,11 +113,30 @@ class Node(object):
             'head': opml.headers,
         }
         self.context.update(node.attrib)
-        self.process(node)
+        # Any descendant of this node that has a type attribute gets
+        # displayed on index pages.
+        self.index_children = iter(self.node.xpath('.//outline[@type]'))
+        if process:
+            self.process(node)
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        """
+        Iterate over each child of this node that has a type attribute.
+        """
+        child = next(self.index_children)
+        return Node(child, self.opml, process=False)
 
     def process(self, node):
         """
-        Cycle through the entire OPML body rendering outlines.
+        Render the this node (if possible) and then move onto the next
+        one.
+
+        This method is called from the constructor.
+
+        - node: An <outline> element.
 
         Once the node has been rendered, move on to the next node in
         this order:
@@ -107,15 +150,6 @@ class Node(object):
         If the "parent search" lands on the <body> element, that means
         we have processed everything in the last summit, so we return
         None which stops all further processing.
-
-        There are two classes of nodes for our purposes: "render" and
-        "index" nodes.
-
-          "render" nodes have a special type attribute and all of its
-          children get used when rendering it.
-
-          "index" nodes also have children, but their type attribute
-          isn't one we render specially.
         """
         render_node = node.get('type') in self.render_nodetypes
         index_node = len(node) and not render_node
@@ -139,8 +173,8 @@ class Node(object):
         """
         Return the destination filename for this node.
 
-        The path is built by prepending each ancestor's identifier and
-        joining with a forward slash.
+        The path is built by prepending each ancestor's identifier (up
+        to but excluding the <body>) and joining with a forward slash.
 
         Render nodes get a single HTML file, index nodes get an
         index.html inside a directory.
@@ -148,14 +182,23 @@ class Node(object):
         index_node = self.node.get('type') is None
         ancestors = []
         if index_node:
-            ancestors.insert(0, self.name)
+            ancestors.insert(0, self.name())
         for ancestor in self.node.iterancestors('outline'):
             ancestors.insert(0, Node.identifier(ancestor))
         path = '/'.join(ancestors)
         if index_node:
             return u'%s/index.html' % (path)
         else:
-            return u'%s/%s.html' % (path, self.name)
+            return u'%s/%s.html' % (path, self.name())
+
+    def link(self):
+        """
+        Return the absolute URL of this node.
+
+        Using absolute URLs lets us avoid keeping track of where we
+        are when generating the URL, so it's much simpler.
+        """
+        return '/%s' % self.path()
 
     @staticmethod
     def identifier(node):
@@ -166,6 +209,8 @@ class Node(object):
         This exists as a static method so it can be used on nodes we
         don't want processed/rendered (e.g., with ancestors when
         building the path).
+
+        - node: An <outline> element.
         """
         def _innerCase(s):
             cleaned = re.sub('[^\w ]', '', s)
@@ -177,7 +222,6 @@ class Node(object):
         elif node.get('text'):
             return _innerCase(node.get('text'))
 
-    @property
     def name(self):
         """
         Return the current node's identifier.
@@ -193,7 +237,15 @@ class Node(object):
         """
         def _iterate(node):
             for element in node:
-                yield element.get('text')
+                text = element.get('text')
+                # Ignore rules.
+                #
+                # This works as skipping past any <rule> also skips
+                # its children, so we don't need to catch the
+                # particular elements inside a <rule>.
+                if text.startswith(('<rule', '</rule')):
+                    continue
+                yield text
                 if len(element):
                     for child in _iterate(element):
                         yield child
@@ -219,13 +271,25 @@ class Node(object):
         node_type = self.node.get('type', 'index')
         template = environment.get_template('%s.html' % node_type)
         self.context.update({
-            'body': self.body(),
-            'title': self.text,
+            'node': self,
         })
         content = template.render(self.context)
 
         with fname.open('w') as fp:
             fp.write(content.encode('utf-8'))
+
+    def __unicode__(self):
+        """
+        Return this node's text attribute when a unicode string is
+        required.
+        """
+        return self.text
+
+    def __str__(self):
+        """
+        Return this node's text attribute as a UTF-8 string.
+        """
+        return unicode(self).encode('utf-8')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

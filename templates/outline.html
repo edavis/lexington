@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title }}{% endblock title %}
+{% block title %}
+  {{ node.text }}
+{% endblock title %}
 
 {% block content %}
   <h1>{{ text }}</h1>
-  {% for p in body %}
+  {% for p in node.body() %}
     <p>{{ p }}</p>
   {% endfor %}
 {% endblock content %}

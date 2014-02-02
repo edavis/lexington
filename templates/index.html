@@ -1,3 +1,15 @@
+{% extends "base.html" %}
 
+{% block title %}
+  Index of {{ node }}
+{% endblock title %}
 
-{{ head }}
+{% block content %}
+  <h1>Index of {{ node }}</h1>
+  {% for child in node %}
+    <h2><a href="{{ child.link() }}">{{ child }}</a></h2>
+    {% for p in child.body() %}
+      <p>{{ p }}</p>
+    {% endfor %}
+  {% endfor %}
+{% endblock content %}
