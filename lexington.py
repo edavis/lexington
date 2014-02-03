@@ -277,10 +277,12 @@ class Node(object):
                 # particular elements inside a <rule>.
                 if text.startswith(('<rule', '</rule')):
                     continue
-                yield text
+                yield '<p>' + text + '</p>'
                 if len(element):
+                    yield '<div class=sub>'
                     for child in _iterate(element):
                         yield child
+                    yield '</div>'
         return _iterate(self.node)
 
     def safe_filename(self, filename):
