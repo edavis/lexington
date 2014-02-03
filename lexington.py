@@ -134,7 +134,6 @@ class Node(object):
         self.context = {
             'head': opml.headers,
         }
-        self.context.update(node.attrib)
         self.index_children = iter_index_children(node)
         if process:
             self.process(node)
