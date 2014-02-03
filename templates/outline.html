@@ -10,6 +10,6 @@
     {{ element }}
   {% endfor %}
   <div class="detail meta">
-    <p class="created">Posted: {{ node.attrib.created }}</p>
+    <p class="created">Posted: {{ node.attrib.created|format_timestamp }}</p>
   </div>
 {% endblock content %}

@@ -5,8 +5,10 @@ lexington.py -- an OPML to HTML processor
 """
 
 import re
+import arrow
 import argparse
 import requests
+import email.utils
 from path import path
 from lxml import etree
 from jinja2 import Environment, FileSystemLoader
@@ -16,7 +18,14 @@ from jinja2 import Environment, FileSystemLoader
 # Any feedback on how to avoid having to do this is very welcome.
 import sys; sys.setrecursionlimit(3000)
 
+def format_timestamp(s, fmt=('ddd, MMM d, YYYY', 'h:mm A')):
+    parsed = email.utils.parsedate(s)
+    value = arrow.get(*(parsed[:6]))
+    formatted = [value.to('local').format(f) for f in fmt]
+    return ' at '.join(formatted)
+
 environment = Environment(loader=FileSystemLoader('../templates'))
+environment.filters['format_timestamp'] = format_timestamp
 
 def iter_index_children(el):
     """

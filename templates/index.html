@@ -11,7 +11,7 @@
       {{ element }}
     {% endfor %}
     <div class="index meta">
-      <p class="created">Posted: {{ child.attrib.created }}</p>
+      <p class="created">Posted: {{ child.attrib.created|format_timestamp }}</p>
     </div>
   {% endfor %}
 {% endblock content %}
