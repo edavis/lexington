@@ -6,9 +6,12 @@
 
 {% block content %}
   {% for child in node %}
-    <h2><a href="{{ child.link() }}">{{ child }}</a></h2>
-    {% for p in child.body() %}
-      <p>{{ p }}</p>
+    <h2 class="index headline"><a href="{{ child.link() }}">{{ child }}</a></h2>
+    {% for element in child.body() %}
+      {{ element }}
     {% endfor %}
+    <div class="index meta">
+      <p class="created">Posted: {{ child.attrib.created }}</p>
+    </div>
   {% endfor %}
 {% endblock content %}

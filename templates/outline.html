@@ -1,12 +1,15 @@
 {% extends "base.html" %}
 
 {% block title %}
-  {{ node.text }}
+  {{ node }}
 {% endblock title %}
 
 {% block content %}
-  <h1>{{ text }}</h1>
-  {% for p in node.body() %}
-    <p>{{ p }}</p>
+  <h1 class="detail headline">{{ node }}</h1>
+  {% for element in node.body() %}
+    {{ element }}
   {% endfor %}
+  <div class="detail meta">
+    <p class="created">Posted: {{ node.attrib.created }}</p>
+  </div>
 {% endblock content %}

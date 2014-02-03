@@ -1,11 +1,67 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>{% block title %}{% endblock title %}{% if head.longTitle %}| {{ head.longTitle }}{% endif %}</title>
-    <!-- <link href="https://rawgithub.com/jasonm23/markdown-css-themes/gh-pages/markdown.css" rel="stylesheet">
-    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet"> -->
+
+    <!-- Bootstrap -->
+    <link href="//netdna.bootstrapcdn.com/bootswatch/3.0.3/yeti/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+    <style type="text/css">
+     .sub {
+       padding-left: 25px;
+     }
+     .container {
+       width: 50%;
+       margin-bottom: 200px;
+     }
+     .headline {
+       font-weight: bold;
+     }
+     .detail.headline {
+       margin-top: 70px;
+       margin-bottom: 30px;
+     }
+     .index.headline {
+       margin-top: 50px;
+       margin-bottom: 20px;
+     }
+     .detail.meta {
+       border-top: thin solid #eee;
+       margin-top: 60px;
+       padding-top: 10px;
+     }
+     .created {
+       font-size: 80%;
+     }
+     .index.meta {
+       border-top: thin solid #eee;
+       margin-top: 10px;
+       padding-top: 10px;
+     }
+    </style>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
   </head>
   <body>
-    {% block content %}{% endblock content %}
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
   </body>
 </html>
