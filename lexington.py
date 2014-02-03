@@ -130,6 +130,7 @@ class Node(object):
         self.node = node
         self.opml = opml
         self.text = node.get('text').decode('utf-8')
+        self.attrib = node.attrib
         self.context = {
             'head': opml.headers,
         }
