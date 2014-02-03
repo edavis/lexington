@@ -115,8 +115,6 @@ class Node(object):
     # The node types that we can render
     render_nodetypes = {
         'outline',
-        'link',
-        'thread',
     }
 
     def __init__(self, node, opml, process=True):
